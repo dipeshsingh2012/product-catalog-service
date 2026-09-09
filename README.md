@@ -27,3 +27,4 @@
 
 - **Framework:** Python 3.10+ / FastAPI / Uvicorn
 - **Database:** SQLite / SQLAlchemy / Pydantic v2
+
