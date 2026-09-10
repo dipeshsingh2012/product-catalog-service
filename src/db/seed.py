@@ -155,17 +155,105 @@ SEED_PRODUCTS = [
         "description": "DualZone Technology 2-basket air fryer to cook 2 foods, 2 ways that finish at the same time.",
         "specs_json": '{"baskets": 2, "capacity_qt": 10.0}',
     },
+    {
+        "id": "prod_baarbara_whiskey",
+        "name": "Baarbara Estate - Whiskey Barrel Aged",
+        "brand": "Hiljhil Roasters",
+        "sku": "HJ-BAARBARA-250",
+        "category": "coffee_beans",
+        "price": 1250.00,
+        "compare_at_price": 1400.00,
+        "status": "active",
+        "in_stock": True,
+        "badge": "EXCLUSIVE HARVEST",
+        "rating": 4.9,
+        "review_count": 128,
+        "tax_category": "coffee_beans",
+        "width_cm": 10.0,
+        "height_cm": 20.0,
+        "depth_cm": 6.0,
+        "weight_kg": 0.25,
+        "image_url": "https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=800&auto=format&fit=crop&q=80",
+        "description": "Aged in authentic charred oak whiskey barrels for 60 days before drum roasting. Yields an intoxicating aroma with rich fruit notes and zero alcohol.",
+        "taste_notes_json": '["Ripe Banana", "Red Plum", "Whiskey Oak", "Caramelized Honey"]',
+        "specs_json": '{"Estate": "Baarbara Estate, Chikmagalur", "Altitude": "1,450 MASL", "Roast Level": "Medium Light", "Process": "Whiskey Barrel Washed"}',
+    },
+    {
+        "id": "prod_attikan_estate",
+        "name": "Attikan Estate - Dark Roast",
+        "brand": "Hiljhil Roasters",
+        "sku": "HJ-ATTIKAN-250",
+        "category": "coffee_beans",
+        "price": 550.00,
+        "status": "active",
+        "in_stock": True,
+        "badge": "BESTSELLER",
+        "rating": 5.0,
+        "review_count": 342,
+        "tax_category": "coffee_beans",
+        "width_cm": 10.0,
+        "height_cm": 20.0,
+        "depth_cm": 6.0,
+        "weight_kg": 0.25,
+        "image_url": "https://images.unsplash.com/photo-1610632380989-680fe40816c6?w=800&auto=format&fit=crop&q=80",
+        "description": "Grown in the Biligiriranga Hills. A rich, low-acidity classic tailored for milk-based espresso drinks, mokapots, and French press brews.",
+        "taste_notes_json": '["Dark Chocolate", "Roasted Almonds", "Dried Figs", "Heavy Crema"]',
+        "specs_json": '{"Estate": "Attikan Estate, BR Hills", "Altitude": "1,600 MASL", "Roast Level": "Dark Espresso", "Process": "Pulp Sun-Dried"}',
+    },
+    {
+        "id": "prod_silver_oak_blend",
+        "name": "Silver Oak Blend - Medium Roast",
+        "brand": "Hiljhil Roasters",
+        "sku": "HJ-SILVEROAK-250",
+        "category": "coffee_beans",
+        "price": 520.00,
+        "status": "active",
+        "in_stock": True,
+        "rating": 4.8,
+        "review_count": 95,
+        "tax_category": "coffee_beans",
+        "width_cm": 10.0,
+        "height_cm": 20.0,
+        "depth_cm": 6.0,
+        "weight_kg": 0.25,
+        "image_url": "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&auto=format&fit=crop&q=80",
+        "description": "Our house morning blend pairing Chikmagalur washed arabica with sweet natural lots. Smooth, comforting, and sweet.",
+        "taste_notes_json": '["Hazelnut", "Mild Citrus", "Wild Honey"]',
+        "specs_json": '{"Origin": "Western Ghats Single Estates", "Roast Level": "Medium", "Process": "Washed & Natural Blend"}',
+    },
+    {
+        "id": "prod_fellow_ode_gen2",
+        "name": "Fellow Ode Brew Grinder Gen 2",
+        "brand": "Fellow",
+        "sku": "ODE-GEN2-BLK",
+        "category": "grinder",
+        "price": 28500.00,
+        "status": "active",
+        "in_stock": True,
+        "badge": "PRECISION BURR",
+        "rating": 4.9,
+        "review_count": 84,
+        "tax_category": "equipment",
+        "width_cm": 12.0,
+        "height_cm": 24.1,
+        "depth_cm": 23.9,
+        "weight_kg": 4.5,
+        "top_clearance_cm": 4.0,
+        "side_clearance_cm": 2.0,
+        "rear_clearance_cm": 2.0,
+        "image_url": "https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?w=800&auto=format&fit=crop&q=80",
+        "description": "Engineered for pour-over and drip brewing with commercial-grade 64mm flat burrs, anti-static technology, and single-dose zero-retention loading.",
+        "specs_json": '{"Burrs": "64mm stainless steel flat burrs", "Capacity": "100g single-dose load", "Clearance": "Fits under any cabinet (24.1 cm height)"}',
+    },
 ]
 
 
 async def seed_database(session: AsyncSession):
-    result = await session.execute(select(Product))
-    existing = result.scalars().first()
-    if existing is not None:
-        return  # already seeded
-
     for item in SEED_PRODUCTS:
-        prod = Product(**item)
-        session.add(prod)
+        result = await session.execute(select(Product).where(Product.id == item["id"]))
+        existing = result.scalars().first()
+        if existing is None:
+            prod = Product(**item)
+            session.add(prod)
     await session.commit()
 

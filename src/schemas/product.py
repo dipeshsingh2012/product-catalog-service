@@ -21,9 +21,16 @@ class ProductBase(BaseModel):
     sku: str
     category: str
     price: float
-    width_cm: float
-    height_cm: float
-    depth_cm: float
+    compare_at_price: Optional[float] = None
+    status: str = Field("active", description="'active', 'draft', or 'archived'")
+    in_stock: bool = Field(True, description="Whether the product is available to purchase")
+    badge: Optional[str] = None
+    rating: float = 5.0
+    review_count: int = 0
+    tax_category: str = Field("coffee_beans", description="Tax classification code")
+    width_cm: float = 0.0
+    height_cm: float = 0.0
+    depth_cm: float = 0.0
     weight_kg: Optional[float] = None
     top_clearance_cm: float = 0.0
     side_clearance_cm: float = 0.0
@@ -31,11 +38,39 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = None
     cutout_url: Optional[str] = None
     description: Optional[str] = None
+    taste_notes_json: Optional[str] = None
     specs_json: Optional[str] = None
 
 
 class ProductCreate(ProductBase):
-    id: str
+    id: Optional[str] = None
+
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    sku: Optional[str] = None
+    category: Optional[str] = None
+    price: Optional[float] = None
+    compare_at_price: Optional[float] = None
+    status: Optional[str] = None
+    in_stock: Optional[bool] = None
+    badge: Optional[str] = None
+    rating: Optional[float] = None
+    review_count: Optional[int] = None
+    tax_category: Optional[str] = None
+    width_cm: Optional[float] = None
+    height_cm: Optional[float] = None
+    depth_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    top_clearance_cm: Optional[float] = None
+    side_clearance_cm: Optional[float] = None
+    rear_clearance_cm: Optional[float] = None
+    image_url: Optional[str] = None
+    cutout_url: Optional[str] = None
+    description: Optional[str] = None
+    taste_notes_json: Optional[str] = None
+    specs_json: Optional[str] = None
 
 
 class ProductResponse(ProductBase):
