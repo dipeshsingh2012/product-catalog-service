@@ -105,3 +105,26 @@ async def test_search_by_dimensions(test_client: AsyncClient):
     assert len(items) > 0
     for item in items:
         assert (item["height_cm"] + item["top_clearance_cm"]) <= 25.0
+
+
+@pytest.mark.asyncio
+async def test_create_product_auto_sku(test_client: AsyncClient):
+    payload = {
+        "name": "Ratnagiri Estate Honey Anaerobic",
+        "category": "producer_series",
+        "price": 680.0,
+        "estate_name": "Ratnagiri Estate",
+        "weight_kg": 0.25,
+        "variants": [
+            {"size": "250g", "price": 680.0},
+            {"size": "500g", "price": 1280.0},
+        ],
+    }
+    response = await test_client.post("/api/v1/products", json=payload)
+    assert response.status_code == 201
+    created = response.json()
+    assert created["sku"] == "HJ-RATNAGIRI-250"
+    assert created["slug"] == "ratnagiri-estate-honey-anaerobic"
+    assert len(created["variants"]) == 2
+    assert created["variants"][0]["sku"] == "HJ-RATNAGIRI-250G"
+    assert created["variants"][1]["sku"] == "HJ-RATNAGIRI-500G"

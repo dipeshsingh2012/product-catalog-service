@@ -126,6 +126,51 @@ class CatalogService:
         res = await self.session.execute(stmt)
         return list(res.scalars().all())
 
+    async def _generate_unique_sku(
+        self,
+        name: str,
+        brand: Optional[str] = "Hiljhil Roasters",
+        estate_name: Optional[str] = None,
+        weight_kg: Optional[float] = 0.25,
+    ) -> str:
+        brand_clean = (brand or "Hiljhil Roasters").strip()
+        if "hiljhil" in brand_clean.lower():
+            prefix = "HJ"
+        else:
+            words = re.findall(r"[A-Za-z0-9]+", brand_clean)
+            prefix = "".join(w[0] for w in words).upper()[:4] if words else "GEN"
+
+        if estate_name and estate_name.strip():
+            tokens = [t.upper() for t in re.findall(r"[A-Za-z0-9]+", estate_name) if t.lower() != "estate"]
+            if not tokens:
+                tokens = [t.upper() for t in re.findall(r"[A-Za-z0-9]+", estate_name)]
+            descriptor = "-".join(tokens[:2])
+        else:
+            skip_words = {"coffee", "beans", "pouch"}
+            tokens = [t.upper() for t in re.findall(r"[A-Za-z0-9]+", name) if t.lower() not in skip_words]
+            if not tokens:
+                tokens = [t.upper() for t in re.findall(r"[A-Za-z0-9]+", name)]
+            descriptor = "-".join(tokens[:2])
+
+        if weight_kg is not None and weight_kg > 0:
+            if weight_kg >= 1.0:
+                size_str = f"{int(weight_kg) if isinstance(weight_kg, int) or weight_kg.is_integer() else weight_kg}KG"
+            else:
+                size_str = str(int(weight_kg * 1000))
+        else:
+            size_str = "250"
+
+        base_sku = f"{prefix}-{descriptor}-{size_str}"
+
+        candidate_sku = base_sku
+        counter = 1
+        while True:
+            existing = await self.get_by_sku(candidate_sku)
+            if not existing:
+                return candidate_sku
+            counter += 1
+            candidate_sku = f"{base_sku}-{counter}"
+
     async def create_product(self, data: ProductCreate) -> Product:
         dump = data.model_dump()
 
@@ -137,6 +182,33 @@ class CatalogService:
         if not dump.get("id"):
             clean_slug = dump["slug"].replace("-", "_")
             dump["id"] = f"prod_{clean_slug}"
+
+        # Generate SKU if missing
+        if not dump.get("sku"):
+            dump["sku"] = await self._generate_unique_sku(
+                name=data.name,
+                brand=dump.get("brand"),
+                estate_name=dump.get("estate_name"),
+                weight_kg=dump.get("weight_kg"),
+            )
+
+        # Auto-generate variant SKUs if missing in variants array
+        if dump.get("variants") and isinstance(dump["variants"], list):
+            brand_val = dump.get("brand") or "Hiljhil Roasters"
+            pfx = "HJ" if "hiljhil" in brand_val.lower() else "".join(re.findall(r"[A-Za-z0-9]+", brand_val)[:2]).upper()[:4]
+            desc = dump["sku"].split("-")[1] if len(dump["sku"].split("-")) > 1 else "ITEM"
+            updated_variants = []
+            for v in dump["variants"]:
+                if isinstance(v, dict):
+                    v_dict = dict(v)
+                    if not v_dict.get("sku"):
+                        size_raw = v_dict.get("size", "")
+                        clean_sz = re.sub(r"[^A-Za-z0-9]+", "", size_raw).upper() or "VAR"
+                        v_dict["sku"] = f"{pfx}-{desc}-{clean_sz}"
+                    updated_variants.append(v_dict)
+                else:
+                    updated_variants.append(v)
+            dump["variants"] = updated_variants
 
         # Sync taste_notes list into taste_notes_json if missing
         if dump.get("taste_notes") and not dump.get("taste_notes_json"):
