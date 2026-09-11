@@ -39,36 +39,117 @@ Interactive Swagger UI is available at [`/docs`](http://localhost:8001/docs) and
 
 ## 🚀 Local Development Setup
 
-### 1. Dedicated Python Virtual Environment
-This service maintains its own isolated virtual environment in `.venv`:
+### 1. Setting Up Python Virtual Environment (`venv`)
+
+Ensure you have **Python 3.10+** installed on your system. It is strongly recommended to use an isolated virtual environment (`.venv`) to prevent dependency conflicts with other services.
 
 ```bash
-# Navigate to service directory
+# Navigate to the service root directory
 cd product-catalog-service
 
-# Create virtual environment (if not present)
+# Create a dedicated virtual environment named .venv
 python3 -m venv .venv
-
-# Install dependencies in editable mode
-.venv/bin/pip install -e .
 ```
 
-### 2. Database Migrations & Seeding (Alembic)
+#### Activating the Virtual Environment
+
+Activate the virtual environment depending on your operating system:
+
+* **Linux / macOS (bash / zsh):**
+  ```bash
+  source .venv/bin/activate
+  ```
+
+* **Windows (PowerShell):**
+  ```powershell
+  .venv\Scripts\Activate.ps1
+  ```
+
+* **Windows (Command Prompt):**
+  ```cmd
+  .venv\Scripts\activate.bat
+  ```
+
+> [!TIP]
+> Verify that the active environment points to `.venv`:
+> ```bash
+> which python   # On Linux/macOS: should output .../product-catalog-service/.venv/bin/python
+> which pip      # On Linux/macOS: should output .../product-catalog-service/.venv/bin/pip
+> ```
+> To exit the environment at any time, run `deactivate`.
+
+---
+
+### 2. Installing Dependencies
+
+Once the virtual environment is activated:
+
+#### A. Upgrade Build Tooling
+Always ensure your package installer and build tools are up to date:
 ```bash
-# Run database migrations against your Neon PostgreSQL instance
-.venv/bin/alembic upgrade head
-
-# Seed catalog items (Blue Tokai specialty coffee collection)
-.venv/bin/python -m src.db.seed
+pip install --upgrade pip setuptools wheel
 ```
 
-### 3. Running the Service
+#### B. Install Service Dependencies
+Install `product-catalog-service` in **editable mode** (`-e .`). This reads `pyproject.toml` and allows live code changes without needing to reinstall the package:
+
 ```bash
-# Start Uvicorn ASGI server on port 8001
-.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
+# Install core runtime dependencies (FastAPI, SQLAlchemy, Alembic, asyncpg, etc.)
+pip install -e .
 ```
 
-Interactive OpenAPI / Swagger documentation is available at **`http://localhost:8001/docs`**.
+#### C. Optional: Install Development & Testing Tooling
+If you plan to run automated test suites (`pytest`, `pytest-asyncio`) or code formatters/linters (`ruff`):
+
+```bash
+# Install with the [dev] optional dependencies defined in pyproject.toml
+pip install -e ".[dev]"
+```
+
+---
+
+### 3. Environment Configuration
+
+Create a `.env` file in the root directory (or export the variables in your shell):
+
+```bash
+# Neon Serverless PostgreSQL connection string (asyncpg driver format)
+# Note: postgres:// and postgresql:// are automatically normalized to postgresql+asyncpg://
+DATABASE_URL="postgresql+asyncpg://<username>:<password>@<ep-identifier>.pooler.neon.tech/mycommerce-pim?ssl=require"
+
+# Service Host & Port (defaults to 0.0.0.0:8001)
+HOST="0.0.0.0"
+PORT=8001
+DEBUG=True
+```
+
+---
+
+### 4. Database Migrations & Seeding (Alembic)
+
+With the virtual environment active and `DATABASE_URL` configured:
+
+```bash
+# Apply schema migrations to the database
+alembic upgrade head
+
+# Populate the 24 curated Hiljhil Roasters catalog items (single origin estates, nano-lots & gear)
+python -m src.db.seed
+```
+
+---
+
+### 5. Running the Service
+
+Start the FastAPI application using the Uvicorn ASGI server with live reloading enabled:
+
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+* **Interactive OpenAPI / Swagger UI:** [`http://localhost:8001/docs`](http://localhost:8001/docs)
+* **ReDoc Documentation:** [`http://localhost:8001/redoc`](http://localhost:8001/redoc)
+* **Service Health Check:** [`http://localhost:8001/api/v1/health`](http://localhost:8001/api/v1/health)
 
 ---
 
