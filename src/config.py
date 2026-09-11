@@ -1,3 +1,4 @@
+import urllib.parse
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,14 +18,28 @@ class Settings(BaseSettings):
     def normalize_database_url(cls, v: str) -> str:
         if not v:
             return v
+
         # Automatically rewrite standard PostgreSQL schemes for SQLAlchemy asyncpg
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        # asyncpg expects 'ssl' parameter instead of 'sslmode'
-        if "sslmode=" in v:
-            v = v.replace("sslmode=", "ssl=")
+
+        # Parse query parameters to ensure asyncpg compatibility
+        parsed = urllib.parse.urlsplit(v)
+        if parsed.query:
+            qs = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+            # 1. asyncpg expects 'ssl' parameter instead of 'sslmode'
+            if "sslmode" in qs:
+                ssl_vals = qs.pop("sslmode")
+                if "ssl" not in qs:
+                    qs["ssl"] = ssl_vals
+            # 2. Strip libpq-specific parameters unsupported by asyncpg
+            for unsupported in ["channel_binding", "gssencmode"]:
+                qs.pop(unsupported, None)
+            new_query = urllib.parse.urlencode(qs, doseq=True)
+            v = urllib.parse.urlunsplit(parsed._replace(query=new_query))
+
         return v
 
     model_config = SettingsConfigDict(
