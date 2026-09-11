@@ -10,18 +10,14 @@ from src.db.seed import seed_database
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB tables on startup
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    # Seed initial catalog data
-    async with AsyncSessionLocal() as session:
-        await seed_database(session)
-
     yield
 
     # Clean up engine connections on shutdown
-    await engine.dispose()
+    if settings.DATABASE_URL:
+        try:
+            await engine.dispose()
+        except Exception:
+            pass
 
 
 app = FastAPI(
@@ -56,4 +52,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("src.main:app", host=settings.HOST, port=settings.PORT, reload=True)
-

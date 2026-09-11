@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Optional
 from sqlalchemy import or_, select
@@ -13,7 +14,12 @@ class CatalogService:
 
     async def get_by_id(self, product_id: str) -> Optional[Product]:
         result = await self.session.execute(
-            select(Product).where(Product.id == product_id)
+            select(Product).where(
+                or_(
+                    Product.id == product_id,
+                    Product.slug == product_id,
+                )
+            )
         )
         return result.scalars().first()
 
@@ -22,6 +28,9 @@ class CatalogService:
         category: Optional[str] = None,
         brand: Optional[str] = None,
         status: Optional[str] = None,
+        roast_level: Optional[str] = None,
+        process_method: Optional[str] = None,
+        estate_name: Optional[str] = None,
         q: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
@@ -34,6 +43,13 @@ class CatalogService:
             stmt = stmt.where(Product.category == category)
         if brand:
             stmt = stmt.where(Product.brand == brand)
+        if roast_level:
+            stmt = stmt.where(Product.roast_level == roast_level)
+        if process_method:
+            stmt = stmt.where(Product.process_method == process_method)
+        if estate_name:
+            stmt = stmt.where(Product.estate_name.ilike(f"%{estate_name}%"))
+
         if q:
             search_pattern = f"%{q}%"
             stmt = stmt.where(
@@ -42,6 +58,9 @@ class CatalogService:
                     Product.sku.ilike(search_pattern),
                     Product.brand.ilike(search_pattern),
                     Product.description.ilike(search_pattern),
+                    Product.estate_name.ilike(search_pattern),
+                    Product.region.ilike(search_pattern),
+                    Product.varietal.ilike(search_pattern),
                 )
             )
 
@@ -52,6 +71,13 @@ class CatalogService:
             count_stmt = count_stmt.where(Product.category == category)
         if brand:
             count_stmt = count_stmt.where(Product.brand == brand)
+        if roast_level:
+            count_stmt = count_stmt.where(Product.roast_level == roast_level)
+        if process_method:
+            count_stmt = count_stmt.where(Product.process_method == process_method)
+        if estate_name:
+            count_stmt = count_stmt.where(Product.estate_name.ilike(f"%{estate_name}%"))
+
         if q:
             search_pattern = f"%{q}%"
             count_stmt = count_stmt.where(
@@ -60,6 +86,9 @@ class CatalogService:
                     Product.sku.ilike(search_pattern),
                     Product.brand.ilike(search_pattern),
                     Product.description.ilike(search_pattern),
+                    Product.estate_name.ilike(search_pattern),
+                    Product.region.ilike(search_pattern),
+                    Product.varietal.ilike(search_pattern),
                 )
             )
 
@@ -86,7 +115,6 @@ class CatalogService:
         if category:
             stmt = stmt.where(Product.category == category)
 
-        # Condition: height_cm + top_clearance_cm <= max_height_cm
         if max_height_cm is not None:
             stmt = stmt.where((Product.height_cm + Product.top_clearance_cm) <= max_height_cm)
         if max_width_cm is not None:
@@ -100,9 +128,19 @@ class CatalogService:
 
     async def create_product(self, data: ProductCreate) -> Product:
         dump = data.model_dump()
+
+        # Generate slug if missing
+        if not dump.get("slug"):
+            dump["slug"] = re.sub(r"[^a-z0-9]+", "-", data.name.lower()).strip("-")
+
+        # Generate id if missing
         if not dump.get("id"):
-            slug = re.sub(r"[^a-z0-9]+", "_", data.name.lower()).strip("_")
-            dump["id"] = f"prod_{slug}"
+            clean_slug = dump["slug"].replace("-", "_")
+            dump["id"] = f"prod_{clean_slug}"
+
+        # Sync taste_notes list into taste_notes_json if missing
+        if dump.get("taste_notes") and not dump.get("taste_notes_json"):
+            dump["taste_notes_json"] = json.dumps(dump["taste_notes"])
 
         product = Product(**dump)
         self.session.add(product)
@@ -116,6 +154,10 @@ class CatalogService:
             return None
 
         update_dict = data.model_dump(exclude_unset=True)
+
+        if "taste_notes" in update_dict and "taste_notes_json" not in update_dict:
+            update_dict["taste_notes_json"] = json.dumps(update_dict["taste_notes"])
+
         for key, value in update_dict.items():
             setattr(product, key, value)
 
@@ -134,4 +176,3 @@ class CatalogService:
             product.status = "archived"
         await self.session.commit()
         return True
-

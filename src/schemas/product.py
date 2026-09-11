@@ -1,5 +1,6 @@
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+import json
+from typing import Any, Optional
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ClearanceRules(BaseModel):
@@ -15,9 +16,21 @@ class PhysicalDimensions(BaseModel):
     weight_kg: Optional[float] = Field(None, description="Product weight in kg")
 
 
+class ProductVariantItem(BaseModel):
+    id: Optional[str] = None
+    size: str  # e.g. '250g', '500g', '1kg'
+    weight_grams: int = 250
+    price: float
+    compare_at_price: Optional[float] = None
+    available: bool = True
+    sku: Optional[str] = None
+    dimensions_cm: Optional[dict[str, float]] = None
+
+
 class ProductBase(BaseModel):
     name: str
-    brand: str
+    slug: Optional[str] = None
+    brand: str = "Hiljhil Roasters"
     sku: str
     category: str
     price: float
@@ -28,16 +41,41 @@ class ProductBase(BaseModel):
     rating: float = 5.0
     review_count: int = 0
     tax_category: str = Field("coffee_beans", description="Tax classification code")
-    width_cm: float = 0.0
-    height_cm: float = 0.0
-    depth_cm: float = 0.0
-    weight_kg: Optional[float] = None
+
+    # Dimensions & Clearances
+    width_cm: float = 12.0
+    height_cm: float = 20.0
+    depth_cm: float = 6.0
+    weight_kg: Optional[float] = 0.25
     top_clearance_cm: float = 0.0
     side_clearance_cm: float = 0.0
     rear_clearance_cm: float = 0.0
+
+    # Specialty Coffee Terroir & Craft
+    roast_level: Optional[str] = None  # light, medium, medium_dark, dark
+    process_method: Optional[str] = None  # washed, natural, anaerobic, etc.
+    estate_name: Optional[str] = None
+    region: Optional[str] = None
+    elevation_m: Optional[int] = None
+    varietal: Optional[str] = None
+    resting_period_days: Optional[int] = None
+    acidity: Optional[str] = None
+    bitterness: Optional[str] = None
+    body: Optional[str] = None
+    best_enjoyed: Optional[str] = None
+
+    # Assets & Descriptions
     image_url: Optional[str] = None
     cutout_url: Optional[str] = None
     description: Optional[str] = None
+
+    # JSONB Collections
+    taste_notes: Optional[list[str]] = None
+    recommended_brew_methods: Optional[list[str]] = None
+    variants: Optional[list[dict[str, Any]]] = None
+    images: Optional[list[dict[str, Any]]] = None
+
+    # Legacy compatibility fields
     taste_notes_json: Optional[str] = None
     specs_json: Optional[str] = None
 
@@ -48,6 +86,7 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
+    slug: Optional[str] = None
     brand: Optional[str] = None
     sku: Optional[str] = None
     category: Optional[str] = None
@@ -59,6 +98,7 @@ class ProductUpdate(BaseModel):
     rating: Optional[float] = None
     review_count: Optional[int] = None
     tax_category: Optional[str] = None
+
     width_cm: Optional[float] = None
     height_cm: Optional[float] = None
     depth_cm: Optional[float] = None
@@ -66,15 +106,47 @@ class ProductUpdate(BaseModel):
     top_clearance_cm: Optional[float] = None
     side_clearance_cm: Optional[float] = None
     rear_clearance_cm: Optional[float] = None
+
+    roast_level: Optional[str] = None
+    process_method: Optional[str] = None
+    estate_name: Optional[str] = None
+    region: Optional[str] = None
+    elevation_m: Optional[int] = None
+    varietal: Optional[str] = None
+    resting_period_days: Optional[int] = None
+    acidity: Optional[str] = None
+    bitterness: Optional[str] = None
+    body: Optional[str] = None
+    best_enjoyed: Optional[str] = None
+
     image_url: Optional[str] = None
     cutout_url: Optional[str] = None
     description: Optional[str] = None
+
+    taste_notes: Optional[list[str]] = None
+    recommended_brew_methods: Optional[list[str]] = None
+    variants: Optional[list[dict[str, Any]]] = None
+    images: Optional[list[dict[str, Any]]] = None
+
     taste_notes_json: Optional[str] = None
     specs_json: Optional[str] = None
 
 
 class ProductResponse(ProductBase):
     id: str
+
+    @model_validator(mode="after")
+    def sync_legacy_fields(self):
+        # Sync taste_notes list into taste_notes_json if empty
+        if not self.taste_notes_json and self.taste_notes:
+            self.taste_notes_json = json.dumps(self.taste_notes)
+        # Or parse taste_notes_json into taste_notes list if empty
+        elif not self.taste_notes and self.taste_notes_json:
+            try:
+                self.taste_notes = json.loads(self.taste_notes_json)
+            except Exception:
+                pass
+        return self
 
     @property
     def total_required_height_cm(self) -> float:
@@ -102,4 +174,3 @@ class DimensionSearchQuery(BaseModel):
     max_depth_cm: Optional[float] = None
     category: Optional[str] = None
     limit: int = 10
-

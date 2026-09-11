@@ -46,7 +46,16 @@ python3 -m venv .venv
 .venv/bin/pip install -e .
 ```
 
-### 2. Running the Service
+### 2. Database Migrations & Seeding (Alembic)
+```bash
+# Run database migrations against your Neon PostgreSQL instance
+.venv/bin/alembic upgrade head
+
+# Seed catalog items (Blue Tokai specialty coffee collection)
+.venv/bin/python -m src.db.seed
+```
+
+### 3. Running the Service
 ```bash
 # Start Uvicorn ASGI server on port 8001
 .venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
@@ -59,5 +68,6 @@ Interactive OpenAPI / Swagger documentation is available at **`http://localhost:
 ## 🛠️ Tech Stack
 
 * **Framework:** Python 3.10+ / FastAPI / Uvicorn
-* **Database:** SQLite / SQLAlchemy (Async) / aiosqlite
+* **Database:** PostgreSQL (Neon) / SQLAlchemy 2.0 (Async) / asyncpg
+* **Migrations:** Alembic
 * **Validation:** Pydantic v2 / Pydantic Settings
