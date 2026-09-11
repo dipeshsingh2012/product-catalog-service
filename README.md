@@ -18,15 +18,22 @@
 
 ## 🏗️ API Endpoints
 
+Interactive Swagger UI is available at [`/docs`](http://localhost:8001/docs) and ReDoc at [`/redoc`](http://localhost:8001/redoc).
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/api/v1/health` | Service health and version check |
-| `GET` | `/api/v1/products` | List products with pagination, search query (`q`), category, and status filters. Exposes `x-total-count` header. |
-| `GET` | `/api/v1/products/{id}` | Retrieve ground-truth specifications for a single product |
-| `POST` | `/api/v1/products` | Create a new product SKU with validation and auto-slug generation |
-| `PUT` / `PATCH` | `/api/v1/products/{id}` | Full or partial update of product fields (pricing, stock status, specs) |
-| `DELETE` | `/api/v1/products/{id}` | Archive (soft-delete) or permanently remove (`?hard_delete=true`) a product |
+| `GET` | `/api/v1/products` | List products with pagination, search query (`q`), category, roast, process, estate, and status filters. Exposes `x-total-count` header. |
+| `GET` | `/api/v1/products/facets` | Aggregate distinct categories, roast levels, processes, estates, and price bounds for UI filters |
 | `GET` | `/api/v1/products/search/by-dimensions` | Search products constrained by `max_height_cm`, `max_width_cm`, `max_depth_cm` |
+| `GET` | `/api/v1/products/sku/{sku}` | Lookup a single product by exact Stock Keeping Unit (SKU) |
+| `GET` | `/api/v1/products/{id}` | Retrieve specifications for a single product by ID (`prod_attikan_estate`) or slug (`attikan-estate`) |
+| `POST` | `/api/v1/products` | Create a new product with auto-generated collision-free SKU (`HJ-[ESTATE]-[SIZE]`) and slug |
+| `POST` | `/api/v1/products/batch` | Bulk import or upsert multiple products in a single transaction |
+| `PUT` / `PATCH` | `/api/v1/products/{id}` | Full or partial update of product fields (pricing, stock status, specs) |
+| `POST` | `/api/v1/products/{id}/publish` | Transition product status to `active` (visible on storefront) |
+| `POST` | `/api/v1/products/{id}/archive` | Transition product status to `archived` |
+| `DELETE` | `/api/v1/products/{id}` | Archive (soft-delete) or permanently remove (`?hard_delete=true`) a product |
 
 ---
 

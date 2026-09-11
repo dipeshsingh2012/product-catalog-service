@@ -23,6 +23,10 @@ class CatalogService:
         )
         return result.scalars().first()
 
+    async def get_by_sku(self, sku: str) -> Optional[Product]:
+        result = await self.session.execute(select(Product).where(Product.sku == sku))
+        return result.scalars().first()
+
     async def list_products(
         self,
         category: Optional[str] = None,
@@ -248,3 +252,62 @@ class CatalogService:
             product.status = "archived"
         await self.session.commit()
         return True
+
+    async def get_facets(self) -> dict:
+        stmt = select(Product).where(Product.status == "active")
+        res = await self.session.execute(stmt)
+        products = list(res.scalars().all())
+
+        categories = sorted(list({p.category for p in products if p.category}))
+        brands = sorted(list({p.brand for p in products if p.brand}))
+        roast_levels = sorted(list({p.roast_level for p in products if p.roast_level}))
+        process_methods = sorted(list({p.process_method for p in products if p.process_method}))
+        estates = sorted(list({p.estate_name for p in products if p.estate_name}))
+
+        prices = [p.price for p in products if p.price is not None]
+        min_price = min(prices) if prices else 0.0
+        max_price = max(prices) if prices else 0.0
+
+        return {
+            "categories": categories,
+            "brands": brands,
+            "roast_levels": roast_levels,
+            "process_methods": process_methods,
+            "estates": estates,
+            "min_price": float(min_price),
+            "max_price": float(max_price),
+            "total_products": len(products),
+        }
+
+    async def set_product_status(self, product_id: str, new_status: str) -> Optional[Product]:
+        product = await self.get_by_id(product_id)
+        if not product:
+            return None
+        product.status = new_status
+        await self.session.commit()
+        await self.session.refresh(product)
+        return product
+
+    async def bulk_upsert(self, items: list[ProductCreate]) -> tuple[int, int]:
+        inserted = 0
+        updated = 0
+        for data in items:
+            dump = data.model_dump()
+            target_id = dump.get("id")
+            existing = None
+            if target_id:
+                existing = await self.get_by_id(target_id)
+            elif dump.get("sku"):
+                existing = await self.get_by_sku(dump["sku"])
+
+            if existing:
+                for k, v in dump.items():
+                    if v is not None:
+                        setattr(existing, k, v)
+                updated += 1
+            else:
+                await self.create_product(data)
+                inserted += 1
+
+        await self.session.commit()
+        return inserted, updated

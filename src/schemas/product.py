@@ -83,6 +83,43 @@ class ProductBase(BaseModel):
 class ProductCreate(ProductBase):
     id: Optional[str] = None
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Ratnagiri Estate Honey Anaerobic",
+                "category": "producer_series",
+                "brand": "Hiljhil Roasters",
+                "price": 680.0,
+                "compare_at_price": 750.0,
+                "status": "active",
+                "in_stock": True,
+                "badge": "LIMITED RELEASE",
+                "roast_level": "medium_light",
+                "process_method": "honey_anaerobic",
+                "estate_name": "Ratnagiri Estate",
+                "region": "Bababudangiri, Karnataka",
+                "elevation_m": 1400,
+                "varietal": "Catuai",
+                "resting_period_days": 14,
+                "acidity": "medium_high",
+                "bitterness": "low",
+                "body": "Silky",
+                "best_enjoyed": "black",
+                "description": "Fermented with natural coffee cherry honey in temperature-controlled tanks for 72 hours, delivering intense floral jasmine and stone fruit sweetness.",
+                "taste_notes": ["Jasmine", "Peach", "Honey", "Blood Orange"],
+                "recommended_brew_methods": ["pour_over", "aeropress"],
+                "variants": [
+                    {"size": "250g", "price": 680.0, "weight_grams": 250, "available": True},
+                    {"size": "500g", "price": 1280.0, "weight_grams": 500, "available": True}
+                ],
+                "width_cm": 12.0,
+                "height_cm": 20.0,
+                "depth_cm": 6.0,
+                "weight_kg": 0.25
+            }
+        }
+    )
+
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -174,3 +211,25 @@ class DimensionSearchQuery(BaseModel):
     max_depth_cm: Optional[float] = None
     category: Optional[str] = None
     limit: int = 10
+
+
+class CatalogFacetsResponse(BaseModel):
+    categories: list[str] = Field(..., description="List of unique product categories")
+    brands: list[str] = Field(..., description="List of unique brand names")
+    roast_levels: list[str] = Field(..., description="Available roast profiles")
+    process_methods: list[str] = Field(..., description="Available coffee processing methods")
+    estates: list[str] = Field(..., description="List of source single-origin coffee estates")
+    min_price: float = Field(..., description="Lowest catalog price")
+    max_price: float = Field(..., description="Highest catalog price")
+    total_products: int = Field(..., description="Total active items in catalog")
+
+
+class BulkProductCreateRequest(BaseModel):
+    products: list[ProductCreate] = Field(..., description="Batch list of products to create or sync")
+
+
+class BulkProductResponse(BaseModel):
+    inserted: int = Field(..., description="Number of new products inserted")
+    updated: int = Field(..., description="Number of existing products updated")
+    total: int = Field(..., description="Total products processed")
+

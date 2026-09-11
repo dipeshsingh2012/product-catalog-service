@@ -128,3 +128,63 @@ async def test_create_product_auto_sku(test_client: AsyncClient):
     assert len(created["variants"]) == 2
     assert created["variants"][0]["sku"] == "HJ-RATNAGIRI-250G"
     assert created["variants"][1]["sku"] == "HJ-RATNAGIRI-500G"
+
+
+@pytest.mark.asyncio
+async def test_get_catalog_facets(test_client: AsyncClient):
+    response = await test_client.get("/api/v1/products/facets")
+    assert response.status_code == 200
+    facets = response.json()
+    assert len(facets["categories"]) > 0
+    assert "Hiljhil Roasters" in facets["brands"]
+    assert len(facets["roast_levels"]) > 0
+    assert len(facets["estates"]) > 0
+    assert facets["min_price"] > 0
+    assert facets["total_products"] >= 10
+
+
+@pytest.mark.asyncio
+async def test_get_product_by_sku(test_client: AsyncClient):
+    response = await test_client.get("/api/v1/products/sku/HJ-ATTIKAN-250")
+    assert response.status_code == 200
+    product = response.json()
+    assert product["name"] == "Attikan Estate"
+    assert product["sku"] == "HJ-ATTIKAN-250"
+
+
+@pytest.mark.asyncio
+async def test_publish_and_archive_lifecycle(test_client: AsyncClient):
+    # Archive Attikan
+    archive_res = await test_client.post("/api/v1/products/attikan-estate/archive")
+    assert archive_res.status_code == 200
+    assert archive_res.json()["status"] == "archived"
+
+    # Publish Attikan
+    publish_res = await test_client.post("/api/v1/products/attikan-estate/publish")
+    assert publish_res.status_code == 200
+    assert publish_res.json()["status"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_bulk_upsert_products(test_client: AsyncClient):
+    payload = {
+        "products": [
+            {
+                "name": "Coorg Robusta Special",
+                "category": "single_estate",
+                "price": 450.0,
+                "weight_kg": 0.25,
+            },
+            {
+                "name": "Mysore Nugget Extra Bold",
+                "category": "blends",
+                "price": 550.0,
+                "weight_kg": 0.5,
+            },
+        ]
+    }
+    response = await test_client.post("/api/v1/products/batch", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 2
+    assert data["inserted"] + data["updated"] == 2
