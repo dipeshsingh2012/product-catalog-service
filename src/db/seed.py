@@ -1126,6 +1126,8 @@ async def seed_database(session: AsyncSession):
 async def main():
     async with AsyncSessionLocal() as session:
         await seed_database(session)
+    from src.db.database import engine
+    await engine.dispose()
 
 
 if __name__ == "__main__":
