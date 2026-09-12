@@ -1,0 +1,21 @@
+name: Deploy Product Catalog Service to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    uses: dipeshsingh2012/shared-workflows/.github/workflows/deploy-cloud-run.yml@main
+    with:
+      service_name: 'product-catalog-service'
+      port: 8001
+      health_check_path: '/api/v1/health'
+    secrets:
+      DATABASE_URL: ${{ secrets.SQL_DB || secrets.DATABASE_URL }}
