@@ -1,10 +1,18 @@
+import logging
+import time
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes import router as api_router
 from src.config import settings
 from src.db.database import engine
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("product_catalog")
 
 tags_metadata = [
     {
@@ -84,6 +92,34 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    origin = request.headers.get("origin", "-")
+    client_ip = request.client.host if request.client else "-"
+    path = request.url.path
+    query = request.url.query
+    full_path = f"{path}?{query}" if query else path
+
+    try:
+        response = await call_next(request)
+        duration_ms = round((time.time() - start_time) * 1000, 2)
+        logger.info(
+            f"{request.method} {full_path} -> {response.status_code} "
+            f"({duration_ms}ms) [origin: {origin}] [client: {client_ip}]"
+        )
+        return response
+    except Exception as exc:
+        duration_ms = round((time.time() - start_time) * 1000, 2)
+        logger.error(
+            f"{request.method} {full_path} -> 500 ERROR ({duration_ms}ms) "
+            f"[origin: {origin}] [client: {client_ip}]: {exc}",
+            exc_info=True,
+        )
+        raise exc
+
 
 app.include_router(api_router)
 

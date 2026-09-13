@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,7 @@ from src.schemas.product import (
 )
 from src.services.catalog_service import CatalogService
 
+logger = logging.getLogger("product_catalog")
 router = APIRouter(prefix="/api/v1")
 
 
@@ -77,9 +79,19 @@ async def get_product_by_sku(sku: str, db: AsyncSession = Depends(get_db)):
     service = CatalogService(db)
     product = await service.get_by_sku(sku)
     if not product:
+        diag = await service.get_diagnostic_info(sku)
+        logger.warning(
+            f"[Catalog 404] Product with SKU '{sku}' not found in DB! "
+            f"DB Total: {diag['total_products_in_db']}. Suggestions: {diag['suggestions']}. "
+            f"Sample IDs: {diag['sample_ids']}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with SKU '{sku}' not found",
+            detail=(
+                f"Product with SKU '{sku}' not found. "
+                f"(DB total: {diag['total_products_in_db']} products. "
+                f"Suggestions: {diag['suggestions']})"
+            ),
         )
     return product
 
@@ -138,9 +150,19 @@ async def get_product(product_id: str, db: AsyncSession = Depends(get_db)):
     service = CatalogService(db)
     product = await service.get_by_id(product_id)
     if not product:
+        diag = await service.get_diagnostic_info(product_id)
+        logger.warning(
+            f"[Catalog 404] Product '{product_id}' not found in DB! "
+            f"DB Total: {diag['total_products_in_db']}. Suggestions: {diag['suggestions']}. "
+            f"Sample IDs: {diag['sample_ids']}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with ID or Slug '{product_id}' not found",
+            detail=(
+                f"Product with ID or Slug '{product_id}' not found. "
+                f"(DB total: {diag['total_products_in_db']} products. "
+                f"Suggestions: {diag['suggestions']})"
+            ),
         )
     return product
 

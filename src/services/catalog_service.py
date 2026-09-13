@@ -1,7 +1,7 @@
 import json
 import re
 from typing import Optional
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Product
@@ -22,6 +22,33 @@ class CatalogService:
             )
         )
         return result.scalars().first()
+
+    async def get_diagnostic_info(self, search_term: str) -> dict:
+        total_res = await self.session.execute(select(func.count(Product.id)))
+        total_count = total_res.scalar() or 0
+
+        # Partial matching suggestions
+        cleaned = search_term.replace("prod_", "").replace("-", "_")
+        partial_res = await self.session.execute(
+            select(Product.id).where(
+                or_(
+                    Product.id.ilike(f"%{cleaned}%"),
+                    Product.slug.ilike(f"%{cleaned}%"),
+                    Product.name.ilike(f"%{cleaned}%"),
+                )
+            ).limit(5)
+        )
+        suggestions = list(partial_res.scalars().all())
+
+        # Sample available IDs
+        sample_res = await self.session.execute(select(Product.id).limit(8))
+        sample_ids = list(sample_res.scalars().all())
+
+        return {
+            "total_products_in_db": total_count,
+            "suggestions": suggestions,
+            "sample_ids": sample_ids,
+        }
 
     async def get_by_sku(self, sku: str) -> Optional[Product]:
         result = await self.session.execute(select(Product).where(Product.sku == sku))
