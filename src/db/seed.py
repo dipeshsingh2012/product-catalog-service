@@ -61,12 +61,12 @@ SEED_PRODUCTS = [
         "sku": "HJ-BAARBARA-WBA-250",
         "category": "single_origin",
         "price": 1250.00,
-        "compare_at_price": None,
+        "compare_at_price": 1400.00,
         "status": "active",
         "in_stock": True,
         "badge": "EXCLUSIVE LOT",
-        "rating": 5.0,
-        "review_count": 64,
+        "rating": 4.95,
+        "review_count": 128,
         "tax_category": "coffee_beans",
         "width_cm": 12.0,
         "height_cm": 20.0,
@@ -78,26 +78,103 @@ SEED_PRODUCTS = [
         "roast_level": "medium",
         "process_method": "whiskey_barrel",
         "estate_name": "Baarbara Estate",
-        "region": "Baba Budangiri, Karnataka",
+        "region": "Baba Budangiri, Chikmagalur, Karnataka",
         "elevation_m": 1450,
-        "varietal": "Arabica Selection",
+        "varietal": "Arabica S795",
         "resting_period_days": 10,
         "acidity": "medium",
         "bitterness": "low",
         "body": "Layered and Complex",
         "best_enjoyed": "black",
         "image_url": "https://cdn.shopify.com/s/files/1/0738/1409/files/1_6.jpg?v=1787560255",
-        "description": "Aged for nearly four months in freshly emptied malt whiskey oak barrels in a controlled microclimate. Wine-like aromas with non-alcoholic whiskey oak and Irish cream finish.",
-        "taste_notes": ["Red Plum", "Whiskey Oak", "Ripe Banana", "Cocoa", "Sweet Cardamom", "Irish Cream"],
-        "recommended_brew_methods": ["espresso", "cold_brew", "pour_over", "aeropress"],
+        "description": "This coffee’s journey began at Baarbara Estate in the foothills of Baba Budangiri, the origin of coffee in India. Shaped by resting for nearly four months in freshly emptied malt whiskey oak barrels in a controlled microclimate, turned every few days and cupped regularly. Yields wine-like aromas, sweet cardamom, whiskey oak, and a lingering Irish cream finish. 100% non-alcoholic.",
+        "taste_notes": ["Ripe Banana", "Red Plum", "Whiskey Oak", "Cocoa", "Sweet Cardamom", "Irish Cream"],
+        "recommended_brew_methods": ["aeropress", "pour_over", "moka_pot", "cold_brew"],
         "variants": [
-            {"size": "250g", "weight_grams": 250, "price": 1250.00, "sku": "HJ-BAARBARA-WBA-250", "available": True}
+            {"size": "250g", "weight_grams": 250, "price": 1250.00, "compare_at_price": 1400.00, "sku": "HJ-BAARBARA-WBA-250", "available": True},
+            {"size": "500g", "weight_grams": 500, "price": 2350.00, "compare_at_price": 2800.00, "sku": "HJ-BAARBARA-WBA-500", "available": True},
+            {"size": "1kg", "weight_grams": 1000, "price": 4400.00, "compare_at_price": 5600.00, "sku": "HJ-BAARBARA-WBA-1KG", "available": True}
         ],
         "images": [
-            {"position": 1, "src": "https://cdn.shopify.com/s/files/1/0738/1409/files/1_6.jpg?v=1787560255"}
+            {"position": 1, "src": "https://cdn.shopify.com/s/files/1/0738/1409/files/1_6.jpg?v=1787560255"},
+            {"position": 2, "src": "https://cdn.shopify.com/s/files/1/0738/1409/files/WEB_-100_4.jpg?v=1787741398"},
+            {"position": 3, "src": "https://cdn.shopify.com/s/files/1/0738/1409/files/2_1_7d258e8c-67e8-48b7-9745-98ac3b51d065.jpg?v=1787560255"}
         ],
-        "taste_notes_json": '["Red Plum", "Whiskey Oak", "Ripe Banana", "Cocoa", "Sweet Cardamom", "Irish Cream"]',
-        "specs_json": '{"Aging": "4 Months Oak Barrel", "Alcohol": "Non-Alcoholic", "Origin": "Foothills of Baba Budangiri"}',
+        "taste_notes_json": '["Ripe Banana", "Red Plum", "Whiskey Oak", "Cocoa", "Sweet Cardamom", "Irish Cream"]',
+        "specs_json": json.dumps({
+            "coordinates": {"lat": "13.4062° N", "lng": "75.7686° E"},
+            "sensory_scales": {"acidity": 2.5, "sweetness": 4.5, "body": 4.0, "bitterness": 2.0, "roast_level": 3.0},
+            "estate_details": {
+                "name": "Baarbara Estate",
+                "location": "Chikmagalur, Karnataka",
+                "heritage": "Run by the 3rd generation of seasoned Chikmagalur coffee cultivators from the Indavara family (MG Plantations) with 120+ years of coffee cultivation heritage.",
+                "certifications": ["UTZ Certified", "Rainforest Alliance", "Shade Grown Canopy"]
+            },
+            "origin_story": "This coffee’s journey began at Baarbara Estate in the foothills of Baba Budangiri, the origin of coffee in India. It was shaped by a process the estate has spent years refining: aged for nearly four months in freshly emptied malt whiskey oak barrels housed in a covered, temperature-controlled cellar away from sunlight. The barrels were carefully turned every few days, allowing the beans to absorb rich vanilla oak aromas while preserving coffee terroir. Note: 100% Non-alcoholic.",
+            "resting_note": "Recommended resting period: 10 days from roast date for optimal degassing and flavor clarity.",
+            "brew_guides": [
+                {
+                    "method": "AeroPress",
+                    "time": "2:30 MINS",
+                    "dose": "18G",
+                    "water": "230ML",
+                    "temp": "92°C",
+                    "grind": "Medium-Fine",
+                    "ratio": "1:12.8",
+                    "steps": [
+                        "Rinse paper filter and preheat AeroPress cylinder with hot water.",
+                        "Add 18g medium-fine coffee grounds in standard position.",
+                        "Pour 60ml of 92°C water and stir gently for 30s bloom.",
+                        "Fill to 230ml, attach plunger, and press gently for 45 seconds."
+                    ]
+                },
+                {
+                    "method": "Pour Over",
+                    "time": "3:15 MINS",
+                    "dose": "15G",
+                    "water": "250ML",
+                    "temp": "93°C",
+                    "grind": "Medium",
+                    "ratio": "1:16.7",
+                    "steps": [
+                        "Rinse paper filter with boiling water to remove paper taste.",
+                        "Add 15g medium grounds, leveling the bed.",
+                        "Pour 50ml bloom water and pause 45 seconds for degassing.",
+                        "Pour remaining 200ml in steady spiral concentric circles, finishing drawdown by 3:15."
+                    ]
+                },
+                {
+                    "method": "Moka Pot",
+                    "time": "2:45 MINS",
+                    "dose": "18G",
+                    "water": "120ML",
+                    "temp": "50°C (Preheated)",
+                    "grind": "Fine-Medium",
+                    "ratio": "1:6.7",
+                    "steps": [
+                        "Fill lower chamber with preheated water up to the safety valve.",
+                        "Fill funnel basket with 18g coffee without tamping.",
+                        "Place on low-medium flame; remove immediately when golden hazel flow foams.",
+                        "Cool base under cold tap water to stop extraction."
+                    ]
+                },
+                {
+                    "method": "Cold Brew",
+                    "time": "16:00 HRS",
+                    "dose": "50G",
+                    "water": "450ML",
+                    "temp": "Chilled Water",
+                    "grind": "Coarse",
+                    "ratio": "1:9.0",
+                    "steps": [
+                        "Combine 50g coarse grounds with 450ml cold filtered water in an airtight jar.",
+                        "Gently stir to ensure even saturation.",
+                        "Steep in refrigerator for 16-18 hours.",
+                        "Strain through cloth/paper filter and serve over ice with an orange twist."
+                    ]
+                }
+            ]
+        }, ensure_ascii=False),
     },
     {
         "id": "prod_riverdale_estate_mosto",
